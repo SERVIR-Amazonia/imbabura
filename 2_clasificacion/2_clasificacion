@@ -1,0 +1,181 @@
+// -------------------------------------------------------------------------------
+// Clasificación de imágen para generación de mapas de coberturas de 
+// Imbabura para el año 2019.
+// Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
+// Descripción: Script para la creación de un mapa de coberturas y usos de 
+//              Imbabura para el año 2019 utilizando imágenes Sentinel-1,
+//              Sentinel-2, Planet NICFI, Datos de elevación, y puntos de
+//              referencia provenientes del MAG.
+// Última actualización: 2023-11-28
+// -------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------//
+// ÁREA DE INTERÉS Y SIMBOLOGIA DE CLASES DE COBERTURAS
+//---------------------------------------------------------------------------//
+
+// Definir área de interés y centrar el mapa.
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+Map.centerObject(imbabura, 10);
+
+// Definir simbologia de las clases de coberturas.
+var simbologia =
+'<RasterSymbolizer>' +
+  '<ColorMap type="intervals" extended="false">' +
+    '<ColorMapEntry color="#4A8A2B" quantity="1" label="Bosque Nativo"/>' +
+    '<ColorMapEntry color="#32BFCD" quantity="2" label="Natural"/>' +
+    '<ColorMapEntry color="#9D892A" quantity="3" label="Vegetacion arbustiva"/>' +
+    '<ColorMapEntry color="#D5E483" quantity="4" label="Tierra agropecuaria"/>' +
+    '<ColorMapEntry color="#32E495" quantity="5" label="Paramo"/>' +
+//    '<ColorMapEntry color="#C7CEA4" quantity="6" label="Vegetacion Herbacea"/>' +
+    '<ColorMapEntry color="#32412A" quantity="7" label="Area Poblada"/>' +
+    '<ColorMapEntry color="#BBC2B3" quantity="8" label="Area sin cobertura vegetal"/>' +
+    '<ColorMapEntry color="#9D412B" quantity="9" label="Plantacion Forestal"/>' +
+    '<ColorMapEntry color="#74836C" quantity="10" label="Infraestructura"/>' +
+    // '<ColorMapEntry color="#327CBD" quantity="11" label="Artificial"/>' + 
+    // '<ColorMapEntry color="#75BAB3" quantity="12" label="Glaciar"/>' +
+  '</ColorMap>' +
+'</RasterSymbolizer>';
+
+
+//---------------------------------------------------------------------------//
+// DATOS SATELITALES DE ENTRADA PARA EL MODELO DE CLASIFICACIÒN
+//---------------------------------------------------------------------------//
+
+// Importar mosaico NICFI.
+// Calcular NDVI para NICFI.
+// Agregar banda NDVI a la imagen NICFI.
+var nicfi = ee.Image('projects/pc300-samz-imbabura/assets/imagery/nicfiMedian2019Imbabura');
+var ndviNicfi = nicfi.normalizedDifference(['N', 'R']).rename('ndviNicfi');
+var nicfi = nicfi.addBands(ndviNicfi);
+
+// Importar datos Sentinel-2.
+// Calcular NDVI para Sentinel-2.
+// Agregar banda NDVI a la imagen Sentinel-2.
+var s2 = ee.Image('projects/pc300-samz-imbabura/assets/imagery/s2Median2019ImbaburaCSplusV2cs40');
+var ndviS2 = s2.normalizedDifference(['B8', 'B4']).rename('ndviS2');
+var s2 = s2.addBands(ndviS2);
+
+// Importar datos Sentinel-1.
+var s1 = ee.Image('projects/pc300-samz-imbabura/assets/imagery/s1Median2019Imbabura');
+
+// Importar datos de elevación.
+var dtm = ee.Image('projects/pc300-samz-imbabura/assets/DTM/combined_dtm_srtm').select(['b1_first'], ['b1']);
+
+// Definir bandas a seren utilizadas en el modelo.
+var bandas = ['B', 'G', 'R', 'N', 'ndviNicfi',      // nicfi
+              'B1', 'B2', 'B3', 'B4',               // s2
+              'B5', 'B6', 'B7', 'B8',               // s2
+              'B8A', 'B9', 'B11', 'B12', 'ndviS2',  // s2
+              'VV', 'VH', 'VVVH_ratio',             // s1
+              'b1'];                                // elevación
+
+// Crear una imagen con todas las bandas.
+var stack = nicfi.addBands(s2).addBands(s1).addBands(dtm)
+            .select(bandas);
+
+//---------------------------------------------------------------------------//
+// PUNTOS DE REFERENCIA
+//---------------------------------------------------------------------------//
+
+// Importar puntos de referencia
+var reference = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/reference_points/mag2020_7000perClass');
+
+// Imprimir el número total de puntos.
+print('Cantidad puntos total (100%)', reference.size());
+
+// Extraer información de la imágen en los puntos.
+var points = stack.sampleRegions({
+  collection: reference,
+  scale: 10,
+  tileScale: 16
+  // geometries: true
+}).randomColumn();
+
+// Dividir 80% de los datos para el entrenamiento.
+// El restante 20% se queda para una validación previa sencilla.
+var datosEntrenamiento = points.filter(ee.Filter.lessThan('random', 0.8));
+print('Cantidad puntos entrenamiento (80%)', datosEntrenamiento.size());
+
+var datosPrueba = points.filter(ee.Filter.greaterThanOrEquals('random', 0.8));
+print('Cantidad puntos prueba (20%)', datosPrueba.size());
+
+//---------------------------------------------------------------------------//
+// ENTRENAMIENTO DEL MODELO Y CLASIFICACIÓN DE LA IMAGEN PARA GENERACIÓN
+// DEL MAPA DE COBERTURAS DE IMBABURA 2019
+//---------------------------------------------------------------------------//
+
+// Entrene al clasificador solo con datos de entrenamiento.
+var RFclassifier = ee.Classifier.smileRandomForest(100).train({
+  features: datosEntrenamiento, 
+  classProperty: 'first',
+  inputProperties: bandas
+});
+
+// Imprimir bandas de importancia.
+print(RFclassifier.explain());
+
+// Clasificar la imagen.
+var RFclasificacion = stack.clip(imbabura).classify(RFclassifier);
+
+//---------------------------------------------------------------------------//
+// POS-PROCESAMIENTO PARA LIMPIEZA DE PÍXELES AISLADOS
+//---------------------------------------------------------------------------//
+
+// Contar tamaño de parches.
+var patchsize = RFclasificacion.connectedPixelCount(40, false);
+
+// Correr un filtro espacial majoritario.
+var filtered = RFclasificacion.focal_mode({
+    radius: 10,
+    kernelType: 'square',
+    units: 'meters',
+}); 
+  
+// Actualizar la imagen con filtro mayoritario cuando el tamaño del parche es pequeño.
+var RFclasificacion =  RFclasificacion.where(patchsize.lt(25),filtered);
+
+// Agregar la imagen clasificada al mapa.
+Map.addLayer(RFclasificacion.sldStyle(sld), {}, 'RF classification');
+
+//---------------------------------------------------------------------------//
+// EXPORTAR
+//---------------------------------------------------------------------------//
+
+Export.image.toAsset({
+  image: RFclasificacion,
+  scale: 10,
+  region: imbabura,
+  maxPixels: 1e9,
+  pyramidingPolicy: 'mode',
+  description: 'cob-imbabura-2019',
+  assetId: 'projects/pc300-samz-imbabura/assets/outputs/cob-imbabura-2019'
+  
+});
+
+Export.image.toDrive({
+  image: RFclasificacion,
+  scale: 10,
+  region: imbabura,
+  maxPixels: 1e13,
+  description: 'RFclasificacionv7MagCs40CombDtm',
+  fileNamePrefix: 'cob-imbabura-2019'
+});
+
+//---------------------------------------------------------------------------//
+// VALIDACIÓN DEL MODELO (VALIDACIÓN PRÉVIA)
+//---------------------------------------------------------------------------//
+
+// Ahora pruebe la clasificación (precisión del modelo) con los datos de prueba.
+var clasificacionPrueba = datosPrueba.classify(RFclassifier);
+
+// Crear matriz de confusión.
+var matrizConfusion = clasificacionPrueba.errorMatrix({
+  actual: 'first', 
+  predicted: 'classification',
+  order: [1,2,3,4,5,7,8,9,10]
+});
+
+print('Matriz de Confusión:', matrizConfusion);
+print('Precisión General:', matrizConfusion.accuracy());
+print('Precisión del Produtor:', matrizConfusion.producersAccuracy());
+print('Precisión del Usuario:', matrizConfusion.consumersAccuracy());
