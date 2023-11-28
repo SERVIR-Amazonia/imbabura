@@ -1,0 +1,57 @@
+// -------------------------------------------------------------------------------
+// Creación de puntos de referencia del producto MAG de 2020
+// Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
+// Descripción: Script para la creación de puntos de reference de clases a traves 
+//              del producto de coberturas de MAG 2020.
+// Última actualización: 2023-11-28
+// -------------------------------------------------------------------------------
+
+// Importar área de interés y centrar el mapa.
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+Map.centerObject(imbabura, 10);
+
+// Importar producto MAG de coberturas de 2020.
+var mag2020 = ee.Image('projects/pc300-samz-imbabura/assets/MAG_LC/SC_COBERTURA_2020_raster');
+
+// Definir la simbologia del producto 2020 para visualización.
+var simbologia =
+'<RasterSymbolizer>' +
+  '<ColorMap type="intervals" extended="false">' +
+    '<ColorMapEntry color="#4A8A2B" quantity="1" label="Bosque Nativo"/>' +
+    '<ColorMapEntry color="#32BFCD" quantity="2" label="Natural"/>' +
+    '<ColorMapEntry color="#9D892A" quantity="3" label="Vegetacion arbustiva"/>' +
+    '<ColorMapEntry color="#D5E483" quantity="4" label="Tierra agropecuaria"/>' +
+    '<ColorMapEntry color="#32E495" quantity="5" label="Paramo"/>' +
+//    '<ColorMapEntry color="#C7CEA4" quantity="6" label="Vegetacion Herbacea"/>' +
+    '<ColorMapEntry color="#32412A" quantity="7" label="Area Poblada"/>' +
+    '<ColorMapEntry color="#BBC2B3" quantity="8" label="Area sin cobertura vegetal"/>' +
+    '<ColorMapEntry color="#9D412B" quantity="9" label="Plantacion Forestal"/>' +
+    '<ColorMapEntry color="#74836C" quantity="10" label="Infraestructura"/>' +
+    // '<ColorMapEntry color="#327CBD" quantity="11" label="Artificial"/>' + 
+    // '<ColorMapEntry color="#75BAB3" quantity="12" label="Glaciar"/>' +
+  '</ColorMap>' +
+'</RasterSymbolizer>';
+
+// Agregar mapa MAG de 2020 al mapa.
+Map.addLayer(mag2020.sldStyle(simbologia));
+
+// Convertir imagen a numero intero para extraer puntos de referencia.
+var mag2020 = mag2020.int();
+
+// Extraer puntos de cada clase de cobertura (7 mil de cada en ese caso).
+var reference = mag2020.stratifiedSample({
+  numPoints: 7000,
+  classBand: 'first',
+  region: imbabura,
+  scale: 10,
+  tileScale: 16,
+  geometries: true
+});
+
+// Exportar puntos.
+Export.table.toAsset({
+  collection: reference,
+  description: 'referencePoints',
+  assetId: 'projects/pc300-samz-imbabura/assets/reference_points/mag2020_7000perClass'
+});
+
