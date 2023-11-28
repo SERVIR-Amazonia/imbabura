@@ -1,0 +1,194 @@
+// -------------------------------------------------------------------------------
+// Creación del app para visualizar mapa de coberturas de Imbabura 2019
+// Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
+// Descripción: Script para la creación app para visualizar mapa de coberturas de 
+//              Imbabura 2019 https://servir-amazonia.earthengine.app/view/cob-imbabura
+// Última actualización: 2023-11-28
+// -------------------------------------------------------------------------------
+
+// Mapa de coberturas de 2019.
+var mapa = ee.Image('projects/pc300-samz-imbabura/assets/outputs/RFclasificacion7000v7MagCs40CombDtm');
+
+// Opciones del mapa.
+Map.setOptions('SATELLITE');
+Map.setCenter(-78.352, 0.5301, 10);
+
+// Mosaico NICFI de 2019.
+var nicfi = ee.Image('projects/pc300-samz-imbabura/assets/imagery/nicfiMedian2019Imbabura');
+var nicfiVis = {"bands":["R","G","B"],"min":64,"max":5454,"gamma":1.8};
+Map.addLayer(nicfi, nicfiVis, 'Mosaico mediano NICFI 2019', false);
+
+// Classes y colores para la leyenda
+var sld =
+'<RasterSymbolizer>' +
+  '<ColorMap type="intervals" extended="false">' +
+    '<ColorMapEntry color="#4A8A2B" quantity="1" label="Bosque Nativo"/>' +
+    '<ColorMapEntry color="#32BFCD" quantity="2" label="Natural"/>' +
+    '<ColorMapEntry color="#9D892A" quantity="3" label="Vegetacion arbustiva"/>' +
+    '<ColorMapEntry color="#D5E483" quantity="4" label="Tierra agropecuaria"/>' +
+    '<ColorMapEntry color="#32E495" quantity="5" label="Paramo"/>' +
+    // '<ColorMapEntry color="#C7CEA4" quantity="6" label="Vegetacion Herbacea"/>' +
+    '<ColorMapEntry color="#32412A" quantity="7" label="Area Poblada"/>' +
+    '<ColorMapEntry color="#BBC2B3" quantity="8" label="Area sin cobertura vegetal"/>' +
+    '<ColorMapEntry color="#9D412B" quantity="9" label="Plantacion Forestal"/>' +
+    '<ColorMapEntry color="#74836C" quantity="10" label="Infraestructura"/>' +
+    // '<ColorMapEntry color="#327CBD" quantity="11" label="Artificial"/>' +
+    // '<ColorMapEntry color="#75BAB3" quantity="12" label="Glaciar"/>' +
+  '</ColorMap>' +
+'</RasterSymbolizer>';
+
+// Agregar mapa.
+Map.addLayer(mapa.sldStyle(sld), {}, 'Coberturas 2019');
+
+// Crear panel para la leyenda.
+var legend = ui.Panel({
+  style: {
+    position: 'top-left',
+    padding: '8px 15px'
+  }
+});
+
+var dict = {
+  "names": [
+    "Bosque Nativo",
+    "Natural",
+    "Vegetacion arbustiva",
+    "Tierra agropecuaria",
+    "Páramo",
+    // "Vegetacion Herbacea",
+    "Área Poblada",
+    "Área sin cobertura vegetal",
+    "Plantación Forestal",
+    "Infraestructura",
+    // "Artificial",
+    // "Glaciar"
+  ],
+  "colors": [
+    "#4A8A2B",
+    "#32BFCD",
+    "#9D892A",
+    "#D5E483",
+    "#32E495",
+    // "#C7CEA4",
+    "#32412A",
+    "#BBC2B3",
+    "#9D412B",
+    "#74836C",
+    // "#327CBD",
+    // "#75BAB3"
+  ]};
+
+// Función para generar la leyenda.
+function addCategoricalLegend(panel, dict, title) {
+  
+  // Crear y agregar el título de la leyenda.
+  var legendTitle = ui.Label({
+    value: title,
+    style: {
+      fontWeight: 'bold',
+      fontSize: '18px',
+      margin: '0 0 4px 0',
+      padding: '0'
+    }
+  });
+  panel.add(legendTitle);
+  
+  var loading = ui.Label('Loading legend...', {margin: '2px 0 4px 0'});
+  panel.add(loading);
+  
+  // Creates and styles 1 row of the legend.
+  var makeRow = function(color, name) {
+    // Create the label that is actually the colored box.
+    var colorBox = ui.Label({
+      style: {
+        backgroundColor: color,
+        // Use padding to give the box height and width.
+        padding: '8px',
+        margin: '0 0 4px 0'
+      }
+    });
+  
+    // Create the label filled with the description text.
+    var description = ui.Label({
+      value: name,
+      style: {margin: '0 0 4px 6px'}
+    });
+    
+    return ui.Panel({
+      widgets: [colorBox, description],
+      layout: ui.Panel.Layout.Flow('horizontal')
+    });
+  };
+  
+  // Get the list of palette colors and class names from the image.
+  var palette = dict['colors'];
+  var names = dict['names'];
+  loading.style().set('shown', false);
+  
+  for (var i = 0; i < names.length; i++) {
+    panel.add(makeRow(palette[i], names[i]));
+  }
+  
+  Map.add(panel);
+  
+}
+
+addCategoricalLegend(legend, dict, 'Coberturas y Usos');
+
+// Title of app
+Map.add(ui.Label(
+    'Coberturas y Usos Imbabura 2019', {fontWeight: 'bold', fontSize: '24px'}));
+
+
+// Styling for the legend footnotes.
+var footnote = {
+  fontSize: '10px',
+  stretch: 'horizontal',
+  textAlign: 'center',
+  margin: '4px',
+};
+
+var footnoteTitle = {
+  fontSize: '10px',
+  stretch: 'horizontal',
+  textAlign: 'center',
+  margin: '4px',
+  fontWeight: 'bold'
+};
+
+// Notas a pie de página sobre los datos utilizados.
+var datos = ui.Label('Fuentes de datos para la generación del mapa', footnoteTitle);
+var datosEntrenamiento = ui.Label('Puntos de entrenamiento del modelo: Ministério de Agricultura y Ganadería', footnote);
+var datosDTM = ui.Label('Modelos Digitales de Terreno: SIGTIERRAS, Ministério de Agricultura y Ganadería', footnote);
+var datosDEM = ui.Label('Modelo Digital de Elevación: SRTM, NASA', footnote);
+var datosS2 = ui.Label('Imágenes Sentinel-2: European Space Agency con enmascaramiento de nubes de Google Cloud Score+', footnote);
+var datosNICFI = ui.Label('Imágenes NICFI: Planet', footnote);
+var datosS1 = ui.Label('Imágenes Radar Sentinel-1: European Space Agency', footnote);
+
+Map.add(ui.Panel(
+  [
+    datos,
+    datosEntrenamiento,
+    datosDTM,
+    datosDEM,
+    datosS2,
+    datosS1,
+    datosNICFI
+  ],
+  ui.Panel.Layout.flow('vertical'),
+  {width: '300px', position: 'bottom-right'}));
+
+
+// Opciones para el butón de descarga.
+var downloadOptions = {
+  fontSize: '20px',
+  // stretch: 'horizontal',
+  textAlign: 'center',
+  margin: '4px',
+  fontWeight: 'bold',
+  position: 'top-right'
+};
+
+// Butón de descarga.
+var download = (ui.Label('Descargar Mapa', downloadOptions).setUrl('https://drive.google.com/drive/folders/1czsVaV3oihHkY7HFVxx4WbnlcEUKCqj0?usp=sharing'));
+Map.add(download);
