@@ -1,0 +1,39 @@
+// -------------------------------------------------------------------------------
+// Creación del mosaico Planet NICFI para el año 2019.
+// Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
+// Descripción: Script para la creación del mosaico mediano NICFI año 2019
+//              https://developers.google.com/earth-engine/datasets/catalog/projects_planet-nicfi_assets_basemaps_americas
+// Última actualización: 2023-11-28
+// -------------------------------------------------------------------------------
+
+// Área de interés.
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+
+// Rango de fechas para el compuesto.
+var startDate = '2019-01-01';
+var endDate = '2020-01-01';
+
+// Colección Planet NICFI.
+// Generación del mosaico.
+var nicfi = ee.ImageCollection('projects/planet-nicfi/assets/basemaps/americas')
+              .filter(ee.Filter.date(startDate, endDate))
+              .median()
+              .clip(imbabura);
+
+// Parámetros de visualización.
+var nicfiVis = {"bands":["R","G","B"],"min":64,"max":5454,"gamma":1.8};
+
+// Centrar el mapa.
+Map.centerObject(imbabura, 10);
+
+// Agregar composición al mapa.
+Map.addLayer(nicfi, nicfiVis, 'Mosaico NICFI');
+
+Export.image.toAsset({
+  image: nicfi,
+  region: imbabura,
+  scale: 4.77,
+  maxPixels: 1e13,
+  description: 'nicfiMedian2019Imbabura',
+  assetId: 'projects/pc300-samz-imbabura/assets/imagery/nicfiMedian2019Imbabura'  
+});
