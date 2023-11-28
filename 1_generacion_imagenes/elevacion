@@ -1,0 +1,44 @@
+// -------------------------------------------------------------------------------
+// Creación del mosaico de elevación para Imbabura.
+// Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
+// Descripción: Script para la creación del mosaico de elevación utilizando
+//              DTMs locales del proyecto SIGTIERRAS de MAG y datos SRTM de la NASA.
+// Última actualización: 2023-11-28
+// -------------------------------------------------------------------------------
+
+// Área de interés.
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+
+// Central el mapa.
+Map.centerObject(imbabura, 10);
+
+// Datos SRTM de la NASA.
+// Utilizados para completar datos locales DTM que no tienen información.
+var srtm = ee.Image("NASA/NASADEM_HGT/001").select(['elevation'], ['b1']).clip(imbabura);
+
+// Datos DTM locales.
+var dtm = ee.Image('projects/pc300-samz-imbabura/assets/DTM/dtm_mosaic');
+
+// Agregar imágenes al mapa para inspección.
+Map.addLayer(srtm, {min: 1000, max:4000}, 'SRTM');
+Map.addLayer(dtm, {min: 1000, max:4000}, 'DTM');
+
+// Crear colección de imágenes para después combinar en una imagen.
+var ic = ee.ImageCollection.fromImages([dtm, srtm]);
+
+// Combinar las dos imágenes de modo que los datos SRTM solamente son utilizados
+// donde no hay información de los DTMs locales.
+var finalDtm = ic.reduce(ee.Reducer.firstNonNull()).clip(imbabura);
+
+// Agregar imagen de elevación final al mapa.
+Map.addLayer(finalDtm, {min: 1000, max:4000}, 'DTM final');
+
+// Exportar.
+Export.image.toAsset({
+  image: finalDtm,
+  scale: 10,
+  maxPixels: 1e13,
+  region: imbabura,
+  description: 'combined_dtm_srtm',
+  assetId: 'projects/pc300-samz-imbabura/assets/DTM/combined_dtm_srtm'
+});
