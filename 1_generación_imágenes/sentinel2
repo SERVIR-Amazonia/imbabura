@@ -1,0 +1,72 @@
+// -------------------------------------------------------------------------------
+// Creación del mosaico Sentinel-2 para el año 2019.
+// Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
+// Descripción: Script para la creación del mosaico mediano Sentinel-2 año 2019
+//              utilizando el producto Cloud Score+
+//              https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_CLOUD_SCORE_PLUS_V1_S2_HARMONIZED
+// Última actualización: 2023-11-28
+// -------------------------------------------------------------------------------
+
+// Área de interés.
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+
+// Colección Cloud Score+.
+// Nota: Futuramente cambiar para GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED.
+// Aún esa colección no tienen datos para 2019. Por eso, utilizo la colección de
+// trusted testers.
+var csPlus = ee.ImageCollection(
+    'projects/mldp-trusted-testers-external/assets/g4g_demo_tiles').filterBounds(imbabura);
+
+// Colección Armonizada de Sentinel-2.
+var s2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED');
+
+// Factor de escala para reescalar de bytes al rango [0, 1].
+var csScaleFactor = 255;
+
+// Umbral para convertir CS+ en máscara binaria.
+var threshold = 0.40;
+
+// Rango de fechas para el compuesto.
+var dateStart = '2019-01-01';
+var dateEnd = '2020-01-01';
+
+// Parámetros de visualización de Sentinel-2.
+var visS2csPlus = {
+  bands: ['B4', 'B3', 'B2'], 
+  min: 0, 
+  max: 3000
+}; 
+
+// Obtener lista de bandas de Sentinel-2.
+var s2Bands = s2.first().bandNames();
+
+// Mapear sobre la colección para enlazar los resultados S2 y CS+.
+var linkedCollection = csPlus.map(function(image) {
+  return image.linkCollection(s2, s2Bands);
+});
+
+// Filtrar la colección, enmascarar las imágenes y generar un compuesto mediano.
+var mosaicS2csPlus = linkedCollection
+    .filterDate(dateStart, dateEnd)
+    .map(function(image) {
+      var mask = image.select('cs').divide(csScaleFactor).gte(threshold);
+      return image.updateMask(mask);
+    })
+    .median()
+    .clip(imbabura);
+
+// Centrar el mapa.
+Map.centerObject(imbabura, 10);
+
+// Agregar la composición al mapa.
+Map.addLayer(mosaicS2csPlus, visS2csPlus, 'Mosaico Sentinel-2 CS+');
+
+// Exportar.
+Export.image.toAsset({
+  image: mosaicS2csPlus,
+  scale: 10,
+  region: imbabura,
+  maxPixels: 1e9,
+  description: 's2Median2019ImbaburaCSplusV2cs40',
+  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s2Median2019ImbaburaCSplusV2cs40'
+});
