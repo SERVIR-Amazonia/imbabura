@@ -3,8 +3,12 @@
 // Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
 // Descripción: Script para la creación app para visualizar mapa de coberturas de 
 //              Imbabura 2019 https://servir-amazonia.earthengine.app/view/cob-imbabura
-// Última actualización: 2023-11-28
+// Última actualización: 2023-11-29
 // -------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------//
+// CONFIGURACIÓN DEL MAPA
+//---------------------------------------------------------------------------//
 
 // Mapa de coberturas de 2019.
 var mapa = ee.Image('projects/pc300-samz-imbabura/assets/outputs/RFclasificacion7000v7MagCs40CombDtm');
@@ -39,6 +43,26 @@ var sld =
 
 // Agregar mapa.
 Map.addLayer(mapa.sldStyle(sld), {}, 'Coberturas 2019');
+
+
+//---------------------------------------------------------------------------//
+// CONFIGURACIÓN DEL PANEL
+//---------------------------------------------------------------------------//
+
+// Título del app.
+var titulo = ui.Label('Coberturas y Usos Imbabura 2019', {fontWeight: 'bold', fontSize: '24px'});
+
+var toolPanel = ui.Panel([titulo], 'flow', {width: '300px'});
+ui.root.widgets().add(toolPanel);
+
+// // Create a hyperlink to an external reference.
+// var link = ui.Label(
+//     'Science paper by Hansen, Potapov, Moore, Hancher et al.', {},
+//     'http://science.sciencemag.org/content/342/6160/850');
+// var linkPanel = ui.Panel(
+//     [ui.Label('For more information', {fontWeight: 'bold'}), link]);
+// toolPanel.add(linkPanel);
+
 
 // Crear panel para la leyenda.
 var legend = ui.Panel({
@@ -129,29 +153,27 @@ function addCategoricalLegend(panel, dict, title) {
     panel.add(makeRow(palette[i], names[i]));
   }
   
-  Map.add(panel);
+  toolPanel.add(panel);
   
 }
 
-addCategoricalLegend(legend, dict, 'Coberturas y Usos');
+addCategoricalLegend(legend, dict, 'Leyenda');
 
-// Title of app
-Map.add(ui.Label(
-    'Coberturas y Usos Imbabura 2019', {fontWeight: 'bold', fontSize: '24px'}));
+
 
 
 // Styling for the legend footnotes.
 var footnote = {
   fontSize: '10px',
   stretch: 'horizontal',
-  textAlign: 'center',
+  textAlign: 'left',
   margin: '4px',
 };
 
 var footnoteTitle = {
   fontSize: '10px',
   stretch: 'horizontal',
-  textAlign: 'center',
+  textAlign: 'left',
   margin: '4px',
   fontWeight: 'bold'
 };
@@ -165,7 +187,7 @@ var datosS2 = ui.Label('Imágenes Sentinel-2: European Space Agency con enmascar
 var datosNICFI = ui.Label('Imágenes NICFI: Planet', footnote);
 var datosS1 = ui.Label('Imágenes Radar Sentinel-1: European Space Agency', footnote);
 
-Map.add(ui.Panel(
+toolPanel.add(ui.Panel(
   [
     datos,
     datosEntrenamiento,
@@ -191,4 +213,4 @@ var downloadOptions = {
 
 // Butón de descarga.
 var download = (ui.Label('Descargar Mapa', downloadOptions).setUrl('https://drive.google.com/drive/folders/1czsVaV3oihHkY7HFVxx4WbnlcEUKCqj0?usp=sharing'));
-Map.add(download);
+toolPanel.add(download);
