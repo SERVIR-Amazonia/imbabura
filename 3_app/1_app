@@ -167,14 +167,14 @@ var footnote = {
   fontSize: '10px',
   stretch: 'horizontal',
   textAlign: 'left',
-  margin: '4px',
+  margin: '0 0 4px 12px'
 };
 
 var footnoteTitle = {
   fontSize: '10px',
   stretch: 'horizontal',
   textAlign: 'left',
-  margin: '4px',
+  margin: '0 0 4px 12px',
   fontWeight: 'bold'
 };
 
@@ -186,16 +186,21 @@ var datosDEM = ui.Label('Modelo Digital de Elevación: SRTM, NASA', footnote);
 var datosS2 = ui.Label('Imágenes Sentinel-2: European Space Agency con enmascaramiento de nubes de Google Cloud Score+', footnote);
 var datosNICFI = ui.Label('Imágenes NICFI: Planet', footnote);
 var datosS1 = ui.Label('Imágenes Radar Sentinel-1: European Space Agency', footnote);
+var espacio1 = ui.Label('', footnote);
+var espacio2 = ui.Label('', footnote);
+
 
 toolPanel.add(ui.Panel(
   [
+    espacio1,
     datos,
     datosEntrenamiento,
     datosDTM,
     datosDEM,
     datosS2,
     datosS1,
-    datosNICFI
+    datosNICFI,
+    espacio2
   ],
   ui.Panel.Layout.flow('vertical'),
   {width: '300px', position: 'bottom-right'}));
@@ -206,7 +211,7 @@ var downloadOptions = {
   fontSize: '20px',
   // stretch: 'horizontal',
   textAlign: 'center',
-  margin: '4px',
+  margin: '12px',
   fontWeight: 'bold',
   position: 'top-right'
 };
