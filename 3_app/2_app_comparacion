@@ -1,0 +1,206 @@
+//https://servir-amazonia.earthengine.app/view/cob-imbabura-comp
+
+var cob_imbabura = ee.Image('projects/pc300-samz-imbabura/assets/outputs/RFclasificacion7000v7MagCs40CombDtm');
+
+// LC layers.
+var maateLC2018 = ee.Image('projects/pc300-samz-imbabura/assets/MAATE_LC/combined_2018_simpleClip');
+var maateLC2020 = ee.Image('projects/pc300-samz-imbabura/assets/MAATE_LC/combined_2020_simpleClip');
+var magLC2020 = ee.Image('projects/pc300-samz-imbabura/assets/MAG_LC/SC_COBERTURA_2020_raster');
+
+
+// Remap maateLC2020 values to match maateLC2018 values (2nd level LC only).
+var maateLC2020 = maateLC2020.select('ctn2').remap([2,6,7,1,10,11,4,3,9,8,12,13],[1,2,3,4,5,6,7,8,9,10,11,12]).rename('ctn2');
+
+// Rename maateLC2018 "cobertura0" band to "ctn2" to match maateLC2020.
+var maateLC2018 = maateLC2018.select(['cobertura0'], ['ctn2']);
+
+// NICFI.
+var nicfi = ee.Image('projects/pc300-samz-imbabura/assets/imagery/nicfiMedian2019Imbabura');
+//var nicfiVis = {"bands":["R","G","B"],"min":64,"max":5454,"gamma":1.8};
+
+
+
+// SLD for LC maps.
+var sld =
+'<RasterSymbolizer>' +
+  '<ColorMap type="intervals" extended="false">' +
+    '<ColorMapEntry color="#4A8A2B" quantity="1" label="Bosque Nativo"/>' +
+    '<ColorMapEntry color="#32BFCD" quantity="2" label="Natural"/>' +
+    '<ColorMapEntry color="#9D892A" quantity="3" label="Vegetacion arbustiva"/>' +
+    '<ColorMapEntry color="#D5E483" quantity="4" label="Tierra agropecuaria"/>' +
+    '<ColorMapEntry color="#32E495" quantity="5" label="Paramo"/>' +
+    // '<ColorMapEntry color="#C7CEA4" quantity="6" label="Vegetacion Herbacea"/>' +
+    '<ColorMapEntry color="#32412A" quantity="7" label="Area Poblada"/>' +
+    '<ColorMapEntry color="#BBC2B3" quantity="8" label="Area sin cobertura vegetal"/>' +
+    '<ColorMapEntry color="#9D412B" quantity="9" label="Plantacion Forestal"/>' +
+    '<ColorMapEntry color="#74836C" quantity="10" label="Infraestructura"/>' +
+    // '<ColorMapEntry color="#327CBD" quantity="11" label="Artificial"/>' +
+    // '<ColorMapEntry color="#75BAB3" quantity="12" label="Glaciar"/>' +
+  '</ColorMap>' +
+'</RasterSymbolizer>';
+
+
+/*
+ * Configure maps, link them in a grid
+ */
+
+// Create a map for each visualization option.
+var map1 = ui.Map();
+map1.add(ui.Label('Coberturas Imbabura 2019'));
+map1.addLayer(cob_imbabura.sldStyle(sld), {}, 'Coberturas Imbabura 2019');
+map1.setControlVisibility(false);
+
+var map2 = ui.Map();
+map2.add(ui.Label('2020 MAG'));
+map2.addLayer(magLC2020.sldStyle(sld), {}, '2020 MAG');
+map2.setControlVisibility(false);
+
+var map3 = ui.Map();
+map3.add(ui.Label('2018 MAATE'));
+map3.addLayer(maateLC2018.sldStyle(sld), {}, '2018 MAATE');
+map3.setControlVisibility(false);
+
+var map4 = ui.Map();
+map4.add(ui.Label('2020 MAATE'));
+map4.addLayer(maateLC2020.sldStyle(sld),{}, '2020 MAATE');
+map4.setControlVisibility(false);
+
+var map5 = ui.Map();
+map5.add(ui.Label('2019 Planet NICFI'));
+map5.addLayer(nicfi,{"bands":["R","G","B"],"min":64,"max":5454,"gamma":1.8}, '2019 Planet NICFI');
+map5.setControlVisibility(false);
+
+var map6 = ui.Map();
+map6.add(ui.Label('SATELLITE'));
+map6.setOptions('SATELLITE');
+map6.setControlVisibility(false);
+
+var map7 = ui.Map();
+map7.add(ui.Label('MAP'));
+// Create a panel to hold the legend widget
+var legend = ui.Panel({
+  style: {
+    position: 'bottom-right',
+    padding: '6px 10px'
+  }
+});
+
+var dict = {
+  "names": [
+    "Bosque Nativo",
+    "Natural",
+    "Vegetacion arbustiva",
+    "Tierra agropecuaria",
+    "Paramo",
+    // "Vegetacion Herbacea",
+    "Area Poblada",
+    "Area sin cobertura vegetal",
+    "Plantacion Forestal",
+    "Infraestructura",
+    // "Artificial",
+    // "Glaciar"
+  ],
+  "colors": [
+    "#4A8A2B",
+    "#32BFCD",
+    "#9D892A",
+    "#D5E483",
+    "#32E495",
+    // "#C7CEA4",
+    "#32412A",
+    "#BBC2B3",
+    "#9D412B",
+    "#74836C",
+    // "#327CBD",
+    // "#75BAB3"
+  ]};
+
+// Function to generate the legend
+function addCategoricalLegend(panel, dict, title) {
+  
+  var loading = ui.Label('Loading legend...', {margin: '2px 0 4px 0'});
+  panel.add(loading);
+  
+  // Creates and styles 1 row of the legend.
+  var makeRow = function(color, name) {
+    // Create the label that is actually the colored box.
+    var colorBox = ui.Label({
+      style: {
+        backgroundColor: color,
+        // Use padding to give the box height and width.
+        padding: '8px',
+        margin: '0 0 4px 0'
+      }
+    });
+  
+    // Create the label filled with the description text.
+    var description = ui.Label({
+      value: name,
+      style: {margin: '0 0 1px 2px'}
+    });
+  
+    return ui.Panel({
+      widgets: [colorBox, description],
+      layout: ui.Panel.Layout.Flow('horizontal')
+    });
+  };
+  
+  // Get the list of palette colors and class names from the image.
+  var palette = dict['colors'];
+  var names = dict['names'];
+  loading.style().set('shown', false);
+  
+  for (var i = 0; i < names.length; i++) {
+    panel.add(makeRow(palette[i], names[i]));
+  }
+  
+  map7.add(panel);
+  
+}
+
+addCategoricalLegend(legend, dict, 'Coberturas');
+map7.setControlVisibility(false);
+
+var maps = [map1, map2, map3, map4, map5, map6, map7];
+
+var linker = ui.Map.Linker(maps);
+
+// Enable zooming on the top-left map.
+maps[0].setControlVisibility({zoomControl: true});
+
+// Show the scale (e.g. '500m') on the bottom-right map.
+maps[1].setControlVisibility({scaleControl: true});
+
+// Create a grid of maps.
+var mapGrid = ui.Panel(
+  [
+    ui.Panel([maps[0], maps[1]], null, {stretch: 'both'}),
+    ui.Panel([maps[2], maps[3]], null, {stretch: 'both'}),
+    ui.Panel([maps[4], maps[5]], null, {stretch: 'both'}),
+    ui.Panel([maps[6], /*maps[7]*/], null, {stretch: 'both'}),
+  ],
+  ui.Panel.Layout.Flow('horizontal'), {stretch: 'both'}
+);
+
+// Center the map.
+// All other maps will align themselves to this parent map.
+maps[0].centerObject(cob_imbabura, 9);
+
+
+/*
+* Add a title and initialize
+*/
+
+// Create a title.
+var title = ui.Label('Coberturas Imbabura - Comparación', {
+  stretch: 'horizontal',
+  textAlign: 'center',
+  fontWeight: 'bold',
+  fontSize: '24px'
+});
+
+// Add the maps and title to the ui.root.
+ui.root.widgets().reset([title, mapGrid]);
+ui.root.setLayout(ui.Panel.Layout.Flow('vertical'));
+
+
