@@ -135,7 +135,7 @@ var filtered = RFclasificacion.focal_mode({
 var RFclasificacion =  RFclasificacion.where(patchsize.lt(25),filtered);
 
 // Agregar la imagen clasificada al mapa.
-Map.addLayer(RFclasificacion.sldStyle(sld), {}, 'RF classification');
+Map.addLayer(RFclasificacion.sldStyle(simbologia), {}, 'RF classification');
 
 //---------------------------------------------------------------------------//
 // EXPORTAR
