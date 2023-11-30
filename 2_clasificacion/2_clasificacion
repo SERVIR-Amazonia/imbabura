@@ -6,7 +6,7 @@
 //              Imbabura para el año 2019 utilizando imágenes Sentinel-1,
 //              Sentinel-2, Planet NICFI, Datos de elevación, y puntos de
 //              referencia provenientes del MAG.
-// Última actualización: 2023-11-28
+// Última actualización: 2023-11-30
 // -------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------//
@@ -157,7 +157,7 @@ Export.image.toDrive({
   scale: 10,
   region: imbabura,
   maxPixels: 1e13,
-  description: 'RFclasificacionv7MagCs40CombDtm',
+  description: 'cob-imbabura-2019',
   fileNamePrefix: 'cob-imbabura-2019'
 });
 
