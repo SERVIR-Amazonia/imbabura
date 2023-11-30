@@ -157,7 +157,7 @@ Export.image.toDrive({
   scale: 10,
   region: imbabura,
   maxPixels: 1e13,
-  description: 'RFclasificacionv7MagCs40CombDtm',
+  description: 'cob-imbabura-2019',
   fileNamePrefix: 'cob-imbabura-2019'
 });
 
