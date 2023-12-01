@@ -29,6 +29,10 @@ ESA's Sentinel-1 GRD data from Earth Engine is used. We apply a Terrain Normaliz
 
 #### Sentinel-2
 
+
+
 #### Planet NICFI
+
+Necesitas acceso a la colleción NICFI en GEE. Puedes registrarse siguiendo instrucciones en: https://developers.planet.com/docs/integrations/gee/nicfi/
 
 #### Elevation data
