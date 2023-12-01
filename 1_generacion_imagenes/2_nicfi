@@ -14,6 +14,10 @@ var startDate = '2019-01-01';
 var endDate = '2020-01-01';
 
 // Colección Planet NICFI.
+// Necesitas acceso a la colleción NICFI en GEE.
+// Puedes registrarse siguiendo instrucciones en: 
+// https://developers.planet.com/docs/integrations/gee/nicfi/
+
 // Generación del mosaico.
 var nicfi = ee.ImageCollection('projects/planet-nicfi/assets/basemaps/americas')
               .filter(ee.Filter.date(startDate, endDate))
