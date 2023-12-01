@@ -1,7 +1,6 @@
 # Mapeo de coberturas y usos de la tierra - Imbabura 2019
 
-:construction: Instrucciones en construcción :construction:
-
+🚧Instrucciones en construcción 👷‍♀️
 
 ## Introducción
 
