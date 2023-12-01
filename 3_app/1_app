@@ -219,3 +219,9 @@ var downloadOptions = {
 // Butón de descarga.
 var download = (ui.Label('Descargar Mapa', downloadOptions).setUrl('https://drive.google.com/drive/folders/1czsVaV3oihHkY7HFVxx4WbnlcEUKCqj0?usp=sharing'));
 toolPanel.add(download);
+
+// Repositorios
+var repositorioGEE = (ui.Label('Repositorio GEE', downloadOptions).setUrl('https://code.earthengine.google.com/?accept_repo=users/an-sig/imbabura'));
+toolPanel.add(repositorioGEE);
+var repositorioGithub = (ui.Label('Repositorio GitHub', downloadOptions).setUrl('https://github.com/SERVIR-Amazonia/imbabura'));
+toolPanel.add(repositorioGithub);
