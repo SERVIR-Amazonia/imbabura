@@ -1,6 +1,6 @@
 //https://servir-amazonia.earthengine.app/view/cob-imbabura-comp
 
-var cob_imbabura = ee.Image('projects/pc300-samz-imbabura/assets/outputs/RFclasificacion7000v7MagCs40CombDtm');
+var cob_imbabura = ee.Image('projects/pc300-samz-imbabura/assets/outputs/RFclasificacion7000v7MagCs40CombDtmWs1');
 
 // LC layers.
 var maateLC2018 = ee.Image('projects/pc300-samz-imbabura/assets/MAATE_LC/combined_2018_simpleClip');
