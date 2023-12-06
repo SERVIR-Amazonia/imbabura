@@ -7,6 +7,8 @@
 El objetivo general de la colaboración entre SERVIR-Amazonia y el GAD (Gobierno Autónomo Descentralizado Provincial) de Imbabura es mejorar las capacidades existentes para medir y monitorear la cobertura y uso del suelo en Ecuador con énfasis en la región amazónica para la gestión y gobernanza forestal, incluyendo el contexto de planificación forestal y de uso del suelo y actividades relacionadas.
 Debido a la persistente nubosidad sobre la región, hemos acordado producir un mapa piloto de Cobertura y Uso del Suelo de la provincia de Imbabura para el año 2019, utilizando datos satelitales ópticos y de radar.
 
+## Google Earth Engine set-up
+
 ## Metodología
 
 
