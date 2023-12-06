@@ -11,7 +11,7 @@
 //---------------------------------------------------------------------------//
 
 // Mapa de coberturas de 2019.
-var mapa = ee.Image('projects/pc300-samz-imbabura/assets/outputs/RFclasificacion7000v7MagCs40CombDtm');
+var mapa = ee.Image('projects/pc300-samz-imbabura/assets/outputs/RFclasificacion7000v7MagCs40CombDtmWs1');
 
 // Opciones del mapa.
 Map.setOptions('SATELLITE');
