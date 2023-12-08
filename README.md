@@ -5,11 +5,16 @@
 ## Introducción
 
 El objetivo general de la colaboración entre SERVIR-Amazonia y el GAD (Gobierno Autónomo Descentralizado Provincial) de Imbabura es mejorar las capacidades existentes para medir y monitorear la cobertura y uso del suelo en Ecuador con énfasis en la región amazónica para la gestión y gobernanza forestal, incluyendo el contexto de planificación forestal y de uso del suelo y actividades relacionadas.
+
 Debido a la persistente nubosidad sobre la región, hemos acordado producir un mapa piloto de Cobertura y Uso del Suelo de la provincia de Imbabura para el año 2019, utilizando datos satelitales ópticos y de radar, con las clases de cubiertas y uso abajo.
 
 ![](/images/propuesta.png)
 
-## Google Earth Engine set-up
+## Google Earth Engine (GEE) set-up
+
+Necesitas una cuenta en [Google Earth Engine](https://earthengine.google.com/). Para agencias de gobierno o instituiciones academicas, accessa a [https://earthengine.google.com/noncommercial/](https://earthengine.google.com/noncommercial/) para más informaciones.
+
+Después de tener su cuenta creada, usuarios pueden, se desean, utilizar GEE sin crear un proyecto en la Cloud: [https://code.earthengine.google.com/register](https://code.earthengine.google.com/register) - opción "Noncommercial users can also use Earth Engine without creating Cloud projects. Click here for the signup form."
 
 ## Metodología
 
@@ -58,3 +63,9 @@ La clasificación final puede ser visualizados en la aplicación [https://servir
 Una validación del mapa independente va a ser brindada en 2024.
 
 Una aplicación para comparación con otros mapas disponibles (MAATE y MAG) está disponible en [https://servir-amazonia.earthengine.app/view/cob-imbabura-comp](https://servir-amazonia.earthengine.app/view/cob-imbabura-comp). Los diferentes productos deben ser utilizados de manera complementar. 
+
+## Recursos
+
+Diapositivas presentadas durante el enlazamiento del mapa [aquí](https://docs.google.com/presentation/d/1ewmdR0mngd1_x-9k-iCD84fwyrBS9_0h/edit?usp=sharing&ouid=117588040825190888554&rtpof=true&sd=true) y grabación del evento [aquí](https://www.facebook.com/PrefecturaImbabura/videos/882536243471435/).
+
+Estaremos compartindo los scripts en la API Python futuramente....
