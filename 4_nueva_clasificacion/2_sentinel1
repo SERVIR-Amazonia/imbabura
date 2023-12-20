@@ -1,0 +1,167 @@
+// -------------------------------------------------------------------------------
+// Creación del mosaico Sentinel-1 para el año 2021.
+// Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
+//          Adaptado de Mullissa A., Vollrath A., Braun, C., Slagter B., Balling J., 
+//          Gou Y., Gorelick N.,  Reiche J. https://github.com/adugnag/gee_s1_ard
+// Descripción: Script para la creación del mosaico mediano Sentinel-1 año 2021
+// Última actualización: 2023-12-20
+// -------------------------------------------------------------------------------
+// Proceso:
+// - Creación de un mosaico mediano para 2021
+// - Usando AMBAS polarizaciones, y AMBAS órbitas (asc, desc)
+// - Aplicando reducción de ruido de borde adicional,
+// - Aplicando filtro de moteado GAMMA MAP con ventana kernel de 7x7 en el conjunto 
+//   MULTI usando 10 imágenes
+//   - Justificación en MULTI: SAR Handbook Capítulo 3
+//   - Justificación en 7x7:
+//   - Justificación en GAMMA MAP: https://www.mdpi.com/2073-4441/14/24/4030 | https://github.com/adugnag/gee_s1_ard
+// - Aplicación del aplanamiento del terreno con DEM: USGS/SRTMGL1_003; y modelo VOLUME
+// - Salida en unidad LINEAL
+// - GEOMETRIA: projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura
+// -------------------------------------------------------------------------------
+// Parametros:
+// - START_DATE: La fecha más temprana para incluir imágenes (inclusive).
+// - END_DATE: La última fecha para incluir imágenes para (exclusivo).
+// - POLARIZATION: La polarización de la imagen Sentinel-1 a seleccionar para su procesamiento.
+//   'VV' - selecciona la polarización VV.
+//   'VH' - selecciona la polarización VH.
+//   'VVVH' - selecciona ambas polarizaciones
+// - ORBIT:  Las órbitas a incluir. (string: AMBAS, ASCENDENTE o DESCENDENTE)
+// - GEOMETRY: La región en la que se incluirán las imágenes.
+//             El usuario puede dibujar interactivamente un cuadro delimitador dentro de la ventana del mapa o definir las coordenadas del borde.
+// - APPLY_BORDER_NOISE_CORRECTION: (Opcional) opciones true o false para aplicar una corrección adicional del ruido del borde:
+// - APPLY_SPECKLE_FILTERING: (Opcional) opciones true o false para aplicar el filtro de moteado
+// - SPECKLE_FILTER: Tipo de filtro de moteado a aplicar (String). Si el parámetro APPLY_SPECKLE_FILTERING es verdadero, se utilizará el tipo de filtro de moteado seleccionado.
+//   'BOXCAR' - Aplica un filtro boxcar a cada imagen individual de la colección
+//   'LEE' - Aplica un filtro Lee a cada imagen de la colección basándose en [1].
+//   'GAMMA MAP' - Aplica un filtro de moteado a-posterior máximo Gamma a cada imagen individual de la colección basándose en [2] & [3].
+//   'REFINED LEE' - Aplica el filtro de moteado Lee refinado a cada imagen de la colección.
+//                  basado en [4]
+//   'LEE SIGMA' - Aplica el filtro de moteado Lee sigma mejorado a cada imagen de la colección.
+//                 basado en [5]
+// - SPECKLE_FILTER_FRAMEWORK: es el marco donde se aplica el filtrado (Cadena). Puede ser 'MONO' o 'MULTI'. En el caso MONO
+//                             el filtrado se aplica a cada imagen de la colección individualmente. Mientras que en el caso MULTI
+//                             se aplica el filtro Speckle Multitemporal basado en [6] con cualquiera de los filtros speckle mencionados.
+// - SPECKLE_FILTER_KERNEL_SIZE: es el tamaño de la ventana espacial del filtro aplicado en el filtrado de moteado. Debe ser un número entero impar positivo.
+// - SPECKLE_FILTER_NR_OF_IMAGES: es el número de imágenes a utilizar en el marco del filtro de moteado multitemporal. Se seleccionan todas las imágenes antes de la fecha de la imagen que se va a filtrar.
+//                                Sin embargo, si no hay suficientes imágenes antes de esa fecha, se seleccionan las posteriores.
+// - TERRAIN_FLATTENING : (Opcional) opción verdadera o falsa para aplicar la corrección del Terreno basada en [7] & [8]. 
+// - TERRAIN_FLATTENING_MODEL : modelo a utilizar para la normalización radiométrica del terreno (DIRECT, o VOLUME)
+// - DEM : modelo digital de elevación (MDE) a utilizar (como activo de EE).
+// - TERRAIN_FLATTENING_ADDITIONAL_LAYOVER_SHADOW_BUFFER : parámetro de búfer adicional para máscara pasiva en metros.
+// - FORMAT : El formato de salida de la colección procesada. Puede ser "LINEAR" o "DB".
+// - CLIP_TO_ROI: (Opcional) Recorte la imagen procesada en la región de interés.
+// -------------------------------------------------------------------------------
+// Referencias
+//   [1]  J. S. Lee, “Digital image enhancement and noise filtering by use of local statistics,” 
+//     IEEE Pattern Anal. Machine Intell., vol. PAMI-2, pp. 165–168, Mar. 1980. 
+//   [2]  A. Lopes, R. Touzi, and E. Nezry, “Adaptative speckle filters and scene heterogeneity,
+//     IEEE Trans. Geosci. Remote Sensing, vol. 28, pp. 992–1000, Nov. 1990 
+//   [3]  Lopes, A.; Nezry, E.; Touzi, R.; Laur, H.  Maximum a posteriori speckle filtering and first204order texture models in SAR images.  
+//     10th annual international symposium on geoscience205and remote sensing. Ieee, 1990, pp. 2409–2412.
+//   [4] J.-S. Lee, M.R. Grunes, G. De Grandi. Polarimetric SAR speckle filtering and its implication for classification
+//     IEEE Trans. Geosci. Remote Sens., 37 (5) (1999), pp. 2363-2373.
+//   [5] Lee, J.-S.; Wen, J.-H.; Ainsworth, T.L.; Chen, K.-S.; Chen, A.J. Improved sigma filter for speckle filtering of SAR imagery. 
+//     IEEE Trans. Geosci. Remote Sens. 2009, 47, 202–213.
+//   [6] S. Quegan and J. J. Yu, “Filtering of multichannel SAR images, IEEE Trans Geosci. Remote Sensing, vol. 39, Nov. 2001.
+//   [7] Vollrath, A., Mullissa, A., & Reiche, J. (2020). Angular-Based Radiometric Slope Correction for Sentinel-1 on Google Earth Engine. 
+//     Remote Sensing, 12(11), [1867]. https://doi.org/10.3390/rs12111867
+//   [8] Hoekman, D.H.;  Reiche, J.   Multi-model radiometric slope correction of SAR images of complex terrain using a two-stage semi-empirical approach.
+//     Remote Sensing of Environment2222015,156, 1–10.
+// -------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------//
+// IMPORTAR MÓDULOS NECESÁRIOS
+//---------------------------------------------------------------------------//
+
+var wrapper = require('users/adugnagirma/gee_s1_ard:wrapper');
+var helper = require('users/adugnagirma/gee_s1_ard:utilities');
+
+//---------------------------------------------------------------------------//
+// DEFINIR PARÁMETROS
+//---------------------------------------------------------------------------//
+
+var geometry = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+
+var parameter = {//1. Selección de datos
+              START_DATE: "2021-01-01",
+              STOP_DATE: "2022-01-01",
+              POLARIZATION:'VVVH',
+              ORBIT : 'BOTH',
+              GEOMETRY: geometry,
+              //2. Corrección adicional del ruido de los bordes
+              APPLY_ADDITIONAL_BORDER_NOISE_CORRECTION: true,
+              //3. Filtro de Moteado
+              APPLY_SPECKLE_FILTERING: true,
+              SPECKLE_FILTER_FRAMEWORK: 'MULTI',
+              SPECKLE_FILTER: 'GAMMA MAP',
+              SPECKLE_FILTER_KERNEL_SIZE: 7,
+              SPECKLE_FILTER_NR_OF_IMAGES: 10,
+              //4. Normalización radiométrica del terreno
+              APPLY_TERRAIN_FLATTENING: true,
+              DEM: ee.Image('projects/pc300-samz-imbabura/assets/DTM/combined_dtm_srtm'),
+              TERRAIN_FLATTENING_MODEL: 'VOLUME',
+              TERRAIN_FLATTENING_ADDITIONAL_LAYOVER_SHADOW_BUFFER: 0,
+              //5. Salida
+              FORMAT : 'LINEAR',
+              CLIP_TO_ROI: false,
+};
+
+//---------------------------------------------------------------------------//
+// CREACIÓN DE LA COMPOSICIÓN MEDIANA
+//---------------------------------------------------------------------------//
+      
+// Preprocesar la colección de imágenes S1.
+var s1_preprocces = wrapper.s1_preproc(parameter);
+
+var s1 = s1_preprocces[0];
+s1_preprocces = s1_preprocces[1];
+
+var visparam = {}
+if (parameter.POLARIZATION=='VVVH'){
+     if (parameter.FORMAT=='DB'){
+    var s1_preprocces_view = s1_preprocces.map(helper.add_ratio_lin).map(helper.lin_to_db2);
+    var s1_view = s1.map(helper.add_ratio_lin).map(helper.lin_to_db2);
+    visparam = {bands:['VV','VH','VVVH_ratio'],min: [-20, -25, 1],max: [0, -5, 15]}
+    }
+    else {
+    var s1_preprocces_view = s1_preprocces.map(helper.add_ratio_lin);
+    var s1_view = s1.map(helper.add_ratio_lin);
+    visparam = {bands:['VV','VH','VVVH_ratio'], min: [0.01, 0.0032, 1.25],max: [1, 0.31, 31.62]}
+    }
+}
+else {
+    if (parameter.FORMAT=='DB') {
+    s1_preprocces_view = s1_preprocces.map(helper.lin_to_db);
+    s1_view = s1.map(helper.lin_to_db);
+    visparam = {bands:[parameter.POLARIZATION],min: -25,max: 0};  
+    }
+    else {
+    s1_preprocces_view = s1_preprocces;
+    s1_view = s1;
+    visparam = {bands:[parameter.POLARIZATION],min: 0,max: 0.2};
+    }
+}
+
+// Crear composición mediana.
+var s1_mediana = s1_preprocces_view.median().clip(parameter.GEOMETRY);
+
+// Centrar el mapa.
+Map.centerObject(parameter.GEOMETRY, 10);
+
+// Agregar la composición al mapa.
+Map.addLayer(s1_mediana, {bands: ['VV'], min: -0.2, max: 0.8}, 'Mosaico Sentinel-1');
+
+//---------------------------------------------------------------------------//
+// EXPORTAR
+//---------------------------------------------------------------------------//
+
+Export.image.toAsset({
+  image: s1_mediana,
+  scale: 10,
+  region: parameter.GEOMETRY,
+  maxPixels: 1e13,
+  description: 's1_mediana_2021_imbabura', 
+  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s1Median2021Imbabura' 
+});
+
