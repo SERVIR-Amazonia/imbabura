@@ -1,0 +1,64 @@
+// -------------------------------------------------------------------------------
+// Creación del mosaico Sentinel-2 para el año 2021.
+// Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
+// Descripción: Script para la creación del mosaico mediano Sentinel-2 año 2021
+//              utilizando el producto Cloud Score+
+//              https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_CLOUD_SCORE_PLUS_V1_S2_HARMONIZED
+// Última actualización: 2023-12-20
+// -------------------------------------------------------------------------------
+
+// Área de interés.
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+
+// Rango de fechas para el compuesto.
+var dateStart = '2021-01-01';
+var dateEnd = '2022-01-01';
+
+// Colección Armonizada de Sentinel-2.
+var s2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED');
+
+// Colección de imágenes Cloud Score+. Nota Cloud Score+ se produce a partir de datos de Sentinel-2
+// nivel 1C y puede aplicarse a las colecciones L1C o L2A.
+var csPlus = ee.ImageCollection('GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED');
+
+// Utilizamos la banda 'cs' pero puedes consultar la otra banda 'cs_cdf' en la documentación.
+var QA_BAND = 'cs';
+
+// El umbral para enmascarar; valores entre 0.50 y 0.65 generalmente funcionan bien.
+// Pero en el caso de Imbabura utilizamos 0.40
+// Los valores más altos eliminarán las nubes finas, la bruma y las sombras de cirros.
+var CLEAR_THRESHOLD = 0.40;
+
+// Crear el compuesto.
+var mosaicS2csPlus = s2
+    .filterBounds(imbabura)
+    .filterDate(dateStart, dateEnd)
+    .linkCollection(csPlus, [QA_BAND])
+    .map(function(img) {
+      return img.updateMask(img.select(QA_BAND).gte(CLEAR_THRESHOLD));
+    }).median()
+      .clip(imbabura);
+
+// Parámetros de visualización de Sentinel-2.
+var visS2csPlus = {
+  bands: ['B4', 'B3', 'B2'], 
+  min: 0, 
+  max: 3000
+}; 
+
+
+// Centrar el mapa.
+Map.centerObject(imbabura, 10);
+
+// Agregar la composición al mapa.
+Map.addLayer(mosaicS2csPlus, visS2csPlus, 'Mosaico Sentinel-2 CS+');
+
+// Exportar.
+Export.image.toAsset({
+  image: mosaicS2csPlus,
+  scale: 10,
+  region: imbabura,
+  maxPixels: 1e9,
+  description: 's2Median2021ImbaburaCSplusV2cs40',
+  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s2Median2021ImbaburaCSplusV2cs40'
+});
