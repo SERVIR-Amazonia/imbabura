@@ -24,6 +24,8 @@ El flujo de trabajo está abajo:
 
 ### Generación de datos de entrada
 
+Scripts en la carpeta (```1_generacion_imagenes```)
+
 Actualmente, el modelo utiliza tres tipos de datos diferentes:
 - Imágenes satelitales ópticas
   - Sentinel-2
@@ -55,9 +57,15 @@ Utilizamos el producto de Google [Cloud Score+](https://developers.google.com/ea
 
 ### Modelo de clasificación
 
+Scripts en la carpeta (```2_clasificacion```)
+
 Puntos de referencia extraedos de un producto de 2020 del MAG fueron utilizados para entrenar un classifier Random Forest con 100 árboles de decisiones. 7.000 puntos de cada clase de cobierta y uso de la tierra fueron utilizados, totalizando 63.000 puntos.
 
+Este modelo fue exportado para el reuso posterior.
+
 ## Resultados y app
+
+Scripts en la carpeta (```3_app```)
 
 La clasificación final puede ser visualizados en la aplicación [https://servir-amazonia.earthengine.app/view/cob-imbabura](https://servir-amazonia.earthengine.app/view/cob-imbabura).
 Una validación del mapa independente va a ser brindada en 2024.
@@ -69,3 +77,11 @@ Una aplicación para comparación con otros mapas disponibles (MAATE y MAG) est�
 Diapositivas presentadas durante el enlazamiento del mapa [aquí](https://docs.google.com/presentation/d/1ewmdR0mngd1_x-9k-iCD84fwyrBS9_0h/edit?usp=sharing&ouid=117588040825190888554&rtpof=true&sd=true) y grabación del evento [aquí](https://www.facebook.com/PrefecturaImbabura/videos/882536243471435/).
 
 Estaremos compartindo los scripts en la API Python futuramente....
+
+## Reuso del modelo
+
+Scripts en la carpeta (```4_nueva_clasificacion```)
+
+Con el modelo exportado, podemos aplicarlo para generar mapas de otros años. El primer paso es crear mosaicos para cada dato de entrada (NICFI, Sentinel-1 y Sentinel-2) para el año deseado. Despues, hacemos la clasificación para la imagen que es la combinación de esos datos de entrada más el dato de elevación con el modelo ya entrenado.
+
+
