@@ -161,7 +161,7 @@ Export.image.toAsset({
   scale: 10,
   region: parameter.GEOMETRY,
   maxPixels: 1e13,
-  description: 's1_mediana_2021_imbabura', 
-  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s1Median2021Imbabura' 
+  description: 's1Median2021ImbaburaCombinedElev', 
+  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s1Median2021ImbaburaCombinedElev' 
 });
 
