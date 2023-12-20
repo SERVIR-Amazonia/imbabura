@@ -162,6 +162,6 @@ Export.image.toAsset({
   region: parameter.GEOMETRY,
   maxPixels: 1e13,
   description: 's1_mediana_2019_imbabura', 
-  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s1Median2019Imbabura' 
+  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s1Median2019ImbaburaCombinedElev' 
 });
 
