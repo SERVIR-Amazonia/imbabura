@@ -6,7 +6,7 @@
 //              Imbabura para el año 2019 utilizando imágenes Sentinel-1,
 //              Sentinel-2, Planet NICFI, Datos de elevación, y puntos de
 //              referencia provenientes del MAG.
-// Última actualización: 2023-11-30
+// Última actualización: 2023-12-20
 // -------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------//
@@ -138,7 +138,7 @@ var RFclasificacion =  RFclasificacion.where(patchsize.lt(25),filtered);
 Map.addLayer(RFclasificacion.sldStyle(simbologia), {}, 'RF classification');
 
 //---------------------------------------------------------------------------//
-// EXPORTAR
+// EXPORTAR RESULTADOS
 //---------------------------------------------------------------------------//
 
 Export.image.toAsset({
@@ -179,3 +179,14 @@ print('Matriz de Confusión:', matrizConfusion);
 print('Precisión General:', matrizConfusion.accuracy());
 print('Precisión del Produtor:', matrizConfusion.producersAccuracy());
 print('Precisión del Usuario:', matrizConfusion.consumersAccuracy());
+
+//---------------------------------------------------------------------------//
+// EXPORTAR EL MODELO ENTRENADO
+//---------------------------------------------------------------------------//
+
+// Exportar el random forest classifier como un Earth Engine asset.
+Export.classifier.toAsset({
+  classifier: RFclassifier,
+  description: 'rf_2020MAG',
+  assetId: 'projects/pc300-samz-imbabura/assets/models/rf_2020MAG'
+});
