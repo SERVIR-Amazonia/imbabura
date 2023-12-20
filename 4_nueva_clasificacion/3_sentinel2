@@ -59,6 +59,6 @@ Export.image.toAsset({
   scale: 10,
   region: imbabura,
   maxPixels: 1e9,
-  description: 's2Median2021ImbaburaCSplusV2cs40',
-  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s2Median2021ImbaburaCSplusV2cs40'
+  description: 's2Median2021ImbaburaCS40',
+  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s2Median2021ImbaburaCS40'
 });
