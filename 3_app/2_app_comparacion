@@ -1,6 +1,6 @@
 //https://servir-amazonia.earthengine.app/view/cob-imbabura-comp
 
-var cob_imbabura = ee.Image('projects/pc300-samz-imbabura/assets/outputs/RFclasificacion7000v7MagCs40CombDtmWs1');
+var cob_imbabura = ee.Image('projects/pc300-samz-imbabura/assets/outputs/cob-imbabura-2019');
 
 // LC layers.
 var maateLC2018 = ee.Image('projects/pc300-samz-imbabura/assets/MAATE_LC/combined_2018_simpleClip');
@@ -77,6 +77,7 @@ map6.setControlVisibility(false);
 
 var map7 = ui.Map();
 map7.add(ui.Label('MAP'));
+map7.setCenter(-78.455, 0.4656, 10);
 // Create a panel to hold the legend widget
 var legend = ui.Panel({
   style: {
