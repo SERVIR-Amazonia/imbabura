@@ -51,7 +51,7 @@ var nicfi = nicfi.addBands(ndviNicfi);
 // Importar datos Sentinel-2.
 // Calcular NDVI para Sentinel-2.
 // Agregar banda NDVI a la imagen Sentinel-2.
-var s2 = ee.Image('projects/pc300-samz-imbabura/assets/imagery/s2Median2019ImbaburaCSplusV2cs40');
+var s2 = ee.Image('projects/pc300-samz-imbabura/assets/imagery/s2Median2019ImbaburaCS40');
 var ndviS2 = s2.normalizedDifference(['B8', 'B4']).rename('ndviS2');
 var s2 = s2.addBands(ndviS2);
 
