@@ -1,11 +1,11 @@
 // -------------------------------------------------------------------------------
 // Clasificación de imágen para generación de mapas de coberturas de 
-// Imbabura para el año 2019.
+// Imbabura para el año 2021.
 // Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
 // Descripción: Script para la creación de un mapa de coberturas y usos de 
-//              Imbabura para el año 2019 utilizando imágenes Sentinel-1,
-//              Sentinel-2, Planet NICFI, Datos de elevación, y puntos de
-//              referencia provenientes del MAG.
+//              Imbabura para el año 2021 utilizando imágenes Sentinel-1,
+//              Sentinel-2, Planet NICFI, Datos de elevación, y modelo entrenado 
+//              con puntos de referencia provenientes del MAG.
 // Última actualización: 2023-12-20
 // -------------------------------------------------------------------------------
 
@@ -38,25 +38,25 @@ var simbologia =
 
 
 //---------------------------------------------------------------------------//
-// DATOS SATELITALES DE ENTRADA PARA EL MODELO DE CLASIFICACIÒN
+// DATOS SATELITALES DE ENTRADA PARA LA CLASIFICACIÓN
 //---------------------------------------------------------------------------//
 
 // Importar mosaico NICFI.
 // Calcular NDVI para NICFI.
 // Agregar banda NDVI a la imagen NICFI.
-var nicfi = ee.Image('projects/pc300-samz-imbabura/assets/imagery/nicfiMedian2019Imbabura');
+var nicfi = ee.Image('projects/pc300-samz-imbabura/assets/imagery/nicfiMedian2021Imbabura');
 var ndviNicfi = nicfi.normalizedDifference(['N', 'R']).rename('ndviNicfi');
 var nicfi = nicfi.addBands(ndviNicfi);
 
 // Importar datos Sentinel-2.
 // Calcular NDVI para Sentinel-2.
 // Agregar banda NDVI a la imagen Sentinel-2.
-var s2 = ee.Image('projects/pc300-samz-imbabura/assets/imagery/s2Median2019ImbaburaCS40');
+var s2 = ee.Image('projects/pc300-samz-imbabura/assets/imagery/s2Median2021ImbaburaCS40');
 var ndviS2 = s2.normalizedDifference(['B8', 'B4']).rename('ndviS2');
 var s2 = s2.addBands(ndviS2);
 
 // Importar datos Sentinel-1.
-var s1 = ee.Image('projects/pc300-samz-imbabura/assets/imagery/s1Median2019ImbaburaCombinedElev');
+var s1 = ee.Image('projects/pc300-samz-imbabura/assets/imagery/s1Median2021Imbabura');
 
 // Importar datos de elevación.
 var dtm = ee.Image('projects/pc300-samz-imbabura/assets/DTM/combined_dtm_srtm').select(['b1_first'], ['b1']);
@@ -74,45 +74,13 @@ var stack = nicfi.addBands(s2).addBands(s1).addBands(dtm)
             .select(bandas);
 
 //---------------------------------------------------------------------------//
-// PUNTOS DE REFERENCIA
+// CLASIFICACIÓN DE LA IMAGEN PARA GENERACIÓN
+// DEL MAPA DE COBERTURAS DE IMBABURA 2021
 //---------------------------------------------------------------------------//
 
-// Importar puntos de referencia
-var reference = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/reference_points/mag2020_7000perClass');
-
-// Imprimir el número total de puntos.
-print('Cantidad puntos total (100%)', reference.size());
-
-// Extraer información de la imágen en los puntos.
-var points = stack.sampleRegions({
-  collection: reference,
-  scale: 10,
-  tileScale: 16
-  // geometries: true
-}).randomColumn();
-
-// Dividir 80% de los datos para el entrenamiento.
-// El restante 20% se queda para una validación previa sencilla.
-var datosEntrenamiento = points.filter(ee.Filter.lessThan('random', 0.8));
-print('Cantidad puntos entrenamiento (80%)', datosEntrenamiento.size());
-
-var datosPrueba = points.filter(ee.Filter.greaterThanOrEquals('random', 0.8));
-print('Cantidad puntos prueba (20%)', datosPrueba.size());
-
-//---------------------------------------------------------------------------//
-// ENTRENAMIENTO DEL MODELO Y CLASIFICACIÓN DE LA IMAGEN PARA GENERACIÓN
-// DEL MAPA DE COBERTURAS DE IMBABURA 2019
-//---------------------------------------------------------------------------//
-
-// Entrene al clasificador solo con datos de entrenamiento.
-var RFclassifier = ee.Classifier.smileRandomForest(100).train({
-  features: datosEntrenamiento, 
-  classProperty: 'first',
-  inputProperties: bandas
-});
-
-// Imprimir bandas de importancia.
-print(RFclassifier.explain());
+// Modelo entrenado.
+var classifierId = 'projects/pc300-samz-imbabura/assets/models/rf_2020MAG';
+var RFclassifier = ee.Classifier.load(classifierId);
 
 // Clasificar la imagen.
 var RFclasificacion = stack.clip(imbabura).classify(RFclassifier);
@@ -147,8 +115,8 @@ Export.image.toAsset({
   region: imbabura,
   maxPixels: 1e9,
   pyramidingPolicy: 'mode',
-  description: 'cob-imbabura-2019',
-  assetId: 'projects/pc300-samz-imbabura/assets/outputs/cob-imbabura-2019'
+  description: 'cob-imbabura-2021',
+  assetId: 'projects/pc300-samz-imbabura/assets/outputs/cob-imbabura-2021'
   
 });
 
@@ -157,36 +125,6 @@ Export.image.toDrive({
   scale: 10,
   region: imbabura,
   maxPixels: 1e13,
-  description: 'cob-imbabura-2019',
-  fileNamePrefix: 'cob-imbabura-2019'
-});
-
-//---------------------------------------------------------------------------//
-// VALIDACIÓN DEL MODELO (VALIDACIÓN PRÉVIA)
-//---------------------------------------------------------------------------//
-
-// Ahora pruebe la clasificación (precisión del modelo) con los datos de prueba.
-var clasificacionPrueba = datosPrueba.classify(RFclassifier);
-
-// Crear matriz de confusión.
-var matrizConfusion = clasificacionPrueba.errorMatrix({
-  actual: 'first', 
-  predicted: 'classification',
-  order: [1,2,3,4,5,7,8,9,10]
-});
-
-print('Matriz de Confusión:', matrizConfusion);
-print('Precisión General:', matrizConfusion.accuracy());
-print('Precisión del Produtor:', matrizConfusion.producersAccuracy());
-print('Precisión del Usuario:', matrizConfusion.consumersAccuracy());
-
-//---------------------------------------------------------------------------//
-// EXPORTAR EL MODELO ENTRENADO
-//---------------------------------------------------------------------------//
-
-// Exportar el random forest classifier como un Earth Engine asset.
-Export.classifier.toAsset({
-  classifier: RFclassifier,
-  description: 'rf_2020MAG',
-  assetId: 'projects/pc300-samz-imbabura/assets/models/rf_2020MAG'
+  description: 'cob-imbabura-2021',
+  fileNamePrefix: 'cob-imbabura-2021'
 });

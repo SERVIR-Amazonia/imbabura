@@ -3,7 +3,7 @@
 // Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
 // Descripción: Script para la creación app para visualizar mapa de coberturas de 
 //              Imbabura 2019 https://servir-amazonia.earthengine.app/view/cob-imbabura
-// Última actualización: 2023-11-29
+// Última actualización: 2023-12-20
 // -------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------//
@@ -11,7 +11,7 @@
 //---------------------------------------------------------------------------//
 
 // Mapa de coberturas de 2019.
-var mapa = ee.Image('projects/pc300-samz-imbabura/assets/outputs/RFclasificacion7000v7MagCs40CombDtmWs1');
+var mapa = ee.Image('projects/pc300-samz-imbabura/assets/outputs/cob-imbabura-2019');
 
 // Opciones del mapa.
 Map.setOptions('SATELLITE');

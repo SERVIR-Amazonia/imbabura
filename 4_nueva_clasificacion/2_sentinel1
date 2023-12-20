@@ -1,13 +1,13 @@
 // -------------------------------------------------------------------------------
-// Creación del mosaico Sentinel-1 para el año 2019.
+// Creación del mosaico Sentinel-1 para el año 2021.
 // Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
 //          Adaptado de Mullissa A., Vollrath A., Braun, C., Slagter B., Balling J., 
 //          Gou Y., Gorelick N.,  Reiche J. https://github.com/adugnag/gee_s1_ard
-// Descripción: Script para la creación del mosaico mediano Sentinel-1 año 2019
-// Última actualización: 2023-11-28
+// Descripción: Script para la creación del mosaico mediano Sentinel-1 año 2021
+// Última actualización: 2023-12-20
 // -------------------------------------------------------------------------------
 // Proceso:
-// - Creación de un mosaico mediano para 2019
+// - Creación de un mosaico mediano para 2021
 // - Usando AMBAS polarizaciones, y AMBAS órbitas (asc, desc)
 // - Aplicando reducción de ruido de borde adicional,
 // - Aplicando filtro de moteado GAMMA MAP con ventana kernel de 7x7 en el conjunto 
@@ -84,8 +84,8 @@ var helper = require('users/adugnagirma/gee_s1_ard:utilities');
 var geometry = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
 
 var parameter = {//1. Selección de datos
-              START_DATE: "2019-01-01",
-              STOP_DATE: "2020-01-01",
+              START_DATE: "2021-01-01",
+              STOP_DATE: "2022-01-01",
               POLARIZATION:'VVVH',
               ORBIT : 'BOTH',
               GEOMETRY: geometry,
@@ -161,7 +161,7 @@ Export.image.toAsset({
   scale: 10,
   region: parameter.GEOMETRY,
   maxPixels: 1e13,
-  description: 's1Median2019ImbaburaCombinedElev', 
-  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s1Median2019ImbaburaCombinedElev' 
+  description: 's1Median2021ImbaburaCombinedElev', 
+  assetId: 'projects/pc300-samz-imbabura/assets/imagery/s1Median2021ImbaburaCombinedElev' 
 });
 
