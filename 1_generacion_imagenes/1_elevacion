@@ -3,12 +3,12 @@
 // Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
 // Descripción: Script para la creación del mosaico de elevación utilizando
 //              DTMs locales del proyecto SIGTIERRAS de MAG y datos SRTM de la NASA.
-// Última actualización: 2023-11-28
+// Última actualización: 2024-12-09
 // -------------------------------------------------------------------------------
 
 // Área de interés.
-var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura_0').geometry()//.simplify(100);
-print(imbabura)
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura_0').geometry();
+
 // Central el mapa.
 Map.centerObject(imbabura, 10);
 
