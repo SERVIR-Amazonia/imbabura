@@ -7,7 +7,7 @@
 // -------------------------------------------------------------------------------
 
 // Área de interés.
-var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura_0').geometry();
 
 // Rango de fechas para el compuesto.
 var startDate = '2019-01-01';
