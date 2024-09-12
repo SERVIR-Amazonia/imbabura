@@ -3,11 +3,11 @@
 // Autores: Andréa Puzzi Nicolau, Spatial Informatics Group/SERVIR-Amazonia
 // Descripción: Script para la creación del mosaico mediano NICFI año 2021
 //              https://developers.google.com/earth-engine/datasets/catalog/projects_planet-nicfi_assets_basemaps_americas
-// Última actualización: 2023-12-20
+// Última actualización: 2024-09-12
 // -------------------------------------------------------------------------------
 
 // Área de interés.
-var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura_0').geometry();
 
 // Rango de fechas para el compuesto.
 var startDate = '2021-01-01';

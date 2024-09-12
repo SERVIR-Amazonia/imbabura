@@ -4,7 +4,7 @@
 //          Adaptado de Mullissa A., Vollrath A., Braun, C., Slagter B., Balling J., 
 //          Gou Y., Gorelick N.,  Reiche J. https://github.com/adugnag/gee_s1_ard
 // Descripción: Script para la creación del mosaico mediano Sentinel-1 año 2021
-// Última actualización: 2023-12-20
+// Última actualización: 2024-09-12
 // -------------------------------------------------------------------------------
 // Proceso:
 // - Creación de un mosaico mediano para 2021
@@ -81,7 +81,7 @@ var helper = require('users/adugnagirma/gee_s1_ard:utilities');
 // DEFINIR PARÁMETROS
 //---------------------------------------------------------------------------//
 
-var geometry = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+var geometry = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura_0').geometry();
 
 var parameter = {//1. Selección de datos
               START_DATE: "2021-01-01",

@@ -6,7 +6,7 @@
 //              Imbabura para el año 2021 utilizando imágenes Sentinel-1,
 //              Sentinel-2, Planet NICFI, Datos de elevación, y modelo entrenado 
 //              con puntos de referencia provenientes del MAG.
-// Última actualización: 2023-12-20
+// Última actualización: 2024-09-12
 // -------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------//
@@ -14,7 +14,7 @@
 //---------------------------------------------------------------------------//
 
 // Definir área de interés y centrar el mapa.
-var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+var imbabura = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura_0').geometry();
 Map.centerObject(imbabura, 10);
 
 // Definir simbologia de las clases de coberturas.
