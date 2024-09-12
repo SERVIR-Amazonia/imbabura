@@ -4,7 +4,7 @@
 //          Adaptado de Mullissa A., Vollrath A., Braun, C., Slagter B., Balling J., 
 //          Gou Y., Gorelick N.,  Reiche J. https://github.com/adugnag/gee_s1_ard
 // Descripción: Script para la creación del mosaico mediano Sentinel-1 año 2019
-// Última actualización: 2023-09-12
+// Última actualización: 2024-09-12
 // -------------------------------------------------------------------------------
 // Proceso:
 // - Creación de un mosaico mediano para 2019
