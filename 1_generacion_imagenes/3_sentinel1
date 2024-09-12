@@ -81,7 +81,7 @@ var helper = require('users/adugnagirma/gee_s1_ard:utilities');
 // DEFINIR PARÁMETROS
 //---------------------------------------------------------------------------//
 
-var geometry = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura').geometry().simplify(100);
+var geometry = ee.FeatureCollection('projects/pc300-samz-imbabura/assets/AOI/Merge_Imbabura_0').geometry();
 
 var parameter = {//1. Selección de datos
               START_DATE: "2019-01-01",
