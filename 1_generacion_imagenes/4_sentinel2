@@ -4,7 +4,7 @@
 // Descripción: Script para la creación del mosaico mediano Sentinel-2 año 2019
 //              utilizando el producto Cloud Score+
 //              https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_CLOUD_SCORE_PLUS_V1_S2_HARMONIZED
-// Última actualización: 2023-09-12
+// Última actualización: 2024-09-12
 // -------------------------------------------------------------------------------
 
 // Área de interés.
